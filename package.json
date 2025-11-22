@@ -1,5 +1,5 @@
 {
-  "name": "solidify",
+  "name": "solidify.js",
   "version": "0.1.0",
   "description": "Solidify: Fast, solid, and seamless. Your all-in-one Node.js framework for CLI, ORM, REST, and GraphQL.",
   "type": "module",

@@ -8,9 +8,9 @@
 
 <p align="center">
   <a href="https://github.com/garbin/solidify/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/garbin/solidify/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://www.npmjs.com/package/solidify"><img alt="NPM" src="https://img.shields.io/npm/v/solidify.svg"></a>
+  <a href="https://www.npmjs.com/package/solidify.js"><img alt="NPM" src="https://img.shields.io/npm/v/solidify.js.svg"></a>
   <a href="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"><img alt="Codecov" src="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"></a>
-  <a href="https://github.com/garbin/solidify/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/solidify.svg"></a>
+  <a href="https://github.com/garbin/solidify/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/solidify.js.svg"></a>
 </p>
 
 Solidify is a powerful and flexible web server framework for Node.js. It's built on top of industry-leading libraries like [Fastify](https://www.fastify.io/) for performance, [Objection.js](https://vincit.github.io/objection.js/) for a powerful query builder and ORM, and [Mercurius](https://mercurius.dev/) for seamless GraphQL integration.
@@ -29,7 +29,7 @@ Solidify helps you build robust and scalable APIs by providing a solid foundatio
 ## Installation
 
 ```bash
-npm install solidify
+npm install solidify.js
 ```
 
 You will also need to install the database driver of your choice (e.g., `pg`, `mysql2`, `sqlite3`).
@@ -44,7 +44,7 @@ Create a `User.mjs` model file. Solidify extends Objection.js models with extra 
 
 ```javascript
 // models/User.mjs
-import { Model } from "solidify";
+import { Model } from "solidify.js";
 
 export class User extends Model {
   static tableName = "users";
