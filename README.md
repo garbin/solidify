@@ -8,9 +8,9 @@
 
 <p align="center">
   <a href="https://github.com/garbin/solidify/actions/workflows/main.yml"><img alt="CI" src="https://github.com/garbin/solidify/actions/workflows/main.yml/badge.svg"></a>
-  <a href="https://www.npmjs.com/package/solidify.js"><img alt="NPM" src="https://img.shields.io/npm/v/solidify.js.svg"></a>
+  <a href="https://www.npmjs.com/package/solidify.js"><img alt="NPM" src="https://img.shields.io/npm/v/solidify.js"></a>
   <a href="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"><img alt="Codecov" src="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"></a>
-  <a href="https://github.com/garbin/solidify/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/solidify.js.svg"></a>
+  <a href="https://github.com/garbin/solidify/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/solidify.js"></a>
 </p>
 
 Solidify is a powerful and flexible web server framework for Node.js. It's built on top of industry-leading libraries like [Fastify](https://www.fastify.io/) for performance, [Objection.js](https://vincit.github.io/objection.js/) for a powerful query builder and ORM, and [Mercurius](https://mercurius.dev/) for seamless GraphQL integration.
