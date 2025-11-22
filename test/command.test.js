@@ -81,8 +81,8 @@ test("Command Basic", async (t) => {
   t.is(command.state.input, "1234")
   await command.execute(["", "", "-n", "garbin", "-l", "a", "b", "c"])
   t.deepEqual(command.state.letters, ["a", "b", "c"])
-  await command.execute(["", "", "-n", "garbin", "install", "swiftify", "-s"])
-  t.is(command.state.install.app, "swiftify")
+  await command.execute(["", "", "-n", "garbin", "install", "solidify", "-s"])
+  t.is(command.state.install.app, "solidify")
 })
 
 test("Command with choices", async (t) => {
