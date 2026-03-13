@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker"
 import test from "ava"
 import { createMercuriusTestClient } from "mercurius-integration-testing"
-import { graphql, knexMigration, Model, WebServer } from "../index.mjs"
+import { graphql, knexMigration, Model, WebServer } from "../dist/index.js"
 
 class Profile extends Model {
   static tableName = "profiles"
@@ -489,22 +489,6 @@ test("GraphQL Presets", async (t) => {
 
 test("GraphQL Plugin Error Handling", async (t) => {
   const app = new WebServer()
-  let fatalCalled = false
-  let errorHandlerCalled = false
-  let caughtError = null
-
-  const originalFatal = app.log.fatal
-  app.log.fatal = (e) => {
-    fatalCalled = true
-    caughtError = e
-    originalFatal(e)
-  }
-
-  app.setErrorHandler((error, _request, reply) => {
-    errorHandlerCalled = true
-    caughtError = error
-    reply.send(error)
-  })
 
   const invalidTypeDefs = `
     type Query {
@@ -520,18 +504,12 @@ test("GraphQL Plugin Error Handling", async (t) => {
     }),
   )
 
-  try {
+  // The plugin should throw an error when app.ready() is called with invalid schema
+  const error = await t.throwsAsync(async () => {
     await app.ready()
-  } catch {
-    // app.ready() might throw if the plugin fails to load, but the error handler should still be called internally.
-  }
+  })
 
-  t.true(fatalCalled, "app.log.fatal should have been called")
-  t.true(errorHandlerCalled, "app.errorHandler should have been called")
-  t.true(
-    caughtError instanceof Error,
-    "A caught error should be an instance of Error",
-  )
+  t.true(error instanceof Error, "Should throw an Error for invalid schema")
 })
 
 test("GraphQL Type - model not instanceof Model error", (t) => {

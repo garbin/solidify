@@ -1,5 +1,5 @@
 import test from "ava"
-import { Command } from "../lib/command.mjs"
+import { Command } from "../dist/lib/command.js"
 
 test("Command Basic", async (t) => {
   class BasicCommand extends Command {

@@ -1,5 +1,5 @@
 import test from "ava"
-import { pagination, WebServer } from "../index.mjs"
+import { pagination, WebServer } from "../dist/index.js"
 
 test.serial("WebServer: comprehensive tests", async (t) => {
   const app = new WebServer()

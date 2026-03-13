@@ -7,7 +7,7 @@ import {
   RESTfulRouter,
   Router,
   WebServer,
-} from "../index.mjs"
+} from "../dist/index.js"
 
 test.before((_t) => {
   Model.connect({
@@ -333,4 +333,54 @@ test.serial("RESTfulRouter: child router error handling", (t) => {
     { instanceOf: Error },
   )
   t.is(error.message, `Relation ${BadChild} can not be found`)
+})
+
+test.serial("RESTfulRouter: invalid model in constructor", (t) => {
+  class NotAModel {}
+  const error = t.throws(
+    () => {
+      new RESTfulRouter(NotAModel)
+    },
+    { instanceOf: Error },
+  )
+  t.is(error.message, "Invalid model provided to RESTfulRouter")
+})
+
+test.serial("RESTfulRouter: item with select option", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  const resources = new RESTfulRouter(Resource)
+  resources.item({ select: ["id", "body"] })
+  app.register(resources.plugin())
+
+  const resource = await Resource.query().insert({ body: "Test", counter: 99 })
+  const response = await app.inject().get(`/resources/${resource.id}`)
+  t.is(response.json().body, "Test")
+  t.is(response.json().counter, undefined, "counter should not be selected")
+})
+
+test.serial("RESTfulRouter: list with function-based filterable", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  app.register(pagination())
+  const resources = new RESTfulRouter(Resource)
+
+  resources.list({
+    filterable: ({ filter, query, filters }) => {
+      filter("body")
+      if (filters.customFilter) {
+        query.where("counter", ">", filters.customFilter)
+      }
+    },
+  })
+  app.register(resources.plugin())
+
+  await Resource.query().insertGraph([
+    { body: "Item A", counter: 10 },
+    { body: "Item B", counter: 20 },
+    { body: "Item C", counter: 30 },
+  ])
+
+  const response = await app.inject().get("/resources?customFilter=15")
+  t.is(response.json().length, 2, "should filter by custom function")
 })

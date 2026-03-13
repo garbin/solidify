@@ -2,7 +2,7 @@ import os from "node:os"
 import { faker } from "@faker-js/faker"
 import test from "ava"
 import { ValidationError } from "yup"
-import { knexMigration, Model } from "../index.mjs"
+import { knexMigration, Model } from "../dist/index.js"
 
 test.before((_t) => {
   Model.connect({
@@ -425,4 +425,222 @@ test("Model Relation: mappings and complex table creation", async (t) => {
     },
     "A.b should have correct hasOne relationMappings",
   )
+})
+
+test("Model Relation: manyToMany with composite keys error", (t) => {
+  class CompositeKeyModel extends Model {
+    static tableName = "composite_keys"
+    static idColumn = ["id1", "id2"]
+  }
+
+  class RelatedModel extends Model {
+    static tableName = "related"
+  }
+
+  const error = t.throws(() => CompositeKeyModel.manyToMany(RelatedModel), {
+    instanceOf: Error,
+  })
+  t.is(
+    error.message,
+    "Composite keys are not supported in manyToMany shortcut currently",
+  )
+})
+
+test("Model Relation: manyToMany without throughTable error", (t) => {
+  class ModelA extends Model {
+    static tableName = "model_a"
+  }
+
+  class ModelB extends Model {
+    static tableName = "model_b"
+  }
+
+  const error = t.throws(() => ModelA.manyToMany(ModelB), {
+    instanceOf: Error,
+  })
+  t.is(error.message, "throughTable must be provided for manyToMany relation")
+})
+
+test("Model Relation: belongsToOne alias", (t) => {
+  class Parent extends Model {
+    static tableName = "parents"
+  }
+
+  class Child extends Model {
+    static tableName = "children"
+  }
+
+  const relation = Child.belongsToOne(Parent)
+  t.is(relation.relation, Model.BelongsToOneRelation)
+  t.is(relation.modelClass, Parent)
+})
+
+test("Model: createTable with invalid column type", async (t) => {
+  class InvalidModel extends Model {
+    static tableName = "invalid_table"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      invalid: { type: "nonExistentType" },
+    }
+  }
+
+  const error = await t.throwsAsync(() => InvalidModel.createTable(), {
+    instanceOf: Error,
+  })
+  t.is(error.message, "Column type 'nonExistentType' is not supported by knex.")
+})
+
+test("Model: findRelation with multiple types", (t) => {
+  class Author extends Model {
+    static tableName = "authors"
+    static get relations() {
+      return {
+        books: Author.hasMany(Book),
+        profile: Author.hasOne(Profile),
+      }
+    }
+  }
+
+  class Book extends Model {
+    static tableName = "books"
+  }
+
+  class Profile extends Model {
+    static tableName = "profiles"
+  }
+
+  const result = Author.findRelation(Book, Model.HasManyRelation)
+  t.is(result.name, "books")
+
+  const result2 = Author.findRelation(Profile, Model.HasOneRelation)
+  t.is(result2.name, "profile")
+})
+
+test("Model Relation: belongsToOne with composite keys error", (t) => {
+  class CompositeKeyModel extends Model {
+    static tableName = "composite_keys"
+    static idColumn = ["id1", "id2"]
+  }
+
+  class RelatedModel extends Model {
+    static tableName = "related"
+  }
+
+  const error = t.throws(() => RelatedModel.belongsToOne(CompositeKeyModel), {
+    instanceOf: Error,
+  })
+  t.is(
+    error.message,
+    "Composite keys are not supported in belongsToOne shortcut currently",
+  )
+})
+
+test("Model Relation: hasOne with composite keys error", (t) => {
+  class CompositeKeyModel extends Model {
+    static tableName = "composite_keys"
+    static idColumn = ["id1", "id2"]
+  }
+
+  class RelatedModel extends Model {
+    static tableName = "related"
+  }
+
+  const error = t.throws(() => CompositeKeyModel.hasOne(RelatedModel), {
+    instanceOf: Error,
+  })
+  t.is(
+    error.message,
+    "Composite keys are not supported in hasOne shortcut currently",
+  )
+})
+
+test("Model: createTable with table-level constraints", async (t) => {
+  class ConstrainedModel extends Model {
+    static tableName = "constrained_table"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      name: { type: "string" },
+    }
+    static constraints = {
+      unique: ["name"],
+    }
+  }
+
+  await knexMigration([ConstrainedModel], { drop: true })
+  await knexMigration([ConstrainedModel])
+  t.pass("createTable with table-level constraints ran successfully")
+})
+
+test("Model: createTable with array-format table constraints", async (t) => {
+  class ArrayConstrainedModel extends Model {
+    static tableName = "array_constrained_table"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      email: { type: "string" },
+    }
+    static constraints = [{ type: "unique", args: ["email"] }]
+  }
+
+  await knexMigration([ArrayConstrainedModel], { drop: true })
+  await knexMigration([ArrayConstrainedModel])
+  t.pass("createTable with array-format constraints ran successfully")
+})
+
+test("Model: validator with custom yup type", async (t) => {
+  class CustomTypeModel extends Model {
+    static tableName = "custom_types"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      email: { type: "string", validator: { email: "Invalid email" } },
+    }
+  }
+
+  await knexMigration([CustomTypeModel], { drop: true })
+  await knexMigration([CustomTypeModel])
+
+  const item = await CustomTypeModel.query().insert({
+    email: "test@example.com",
+  })
+  t.is(item.email, "test@example.com")
+
+  const error = await t.throwsAsync(
+    CustomTypeModel.query().insert({ email: "invalid-email" }),
+  )
+  t.is(error.inner[0].path, "email")
+})
+
+test("Model: validator with defaultTo constraint", async (t) => {
+  class DefaultModel extends Model {
+    static tableName = "defaults_table"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      status: {
+        type: "string",
+        constraints: { defaultTo: "active" },
+      },
+    }
+  }
+
+  const validator = DefaultModel.createValidator()
+  const result = validator.validate({ json: {} })
+  t.is(result.status, "active", "should apply default value")
+})
+
+test("Model: createTable with array constraint value", async (t) => {
+  class ArrayConstraintModel extends Model {
+    static tableName = "array_constraint_table"
+    static fields = {
+      id: { type: "increments", constraints: { primary: true } },
+      name: {
+        type: "string",
+        constraints: {
+          defaultTo: ["unnamed"],
+        },
+      },
+    }
+  }
+
+  await knexMigration([ArrayConstraintModel], { drop: true })
+  await knexMigration([ArrayConstraintModel])
+  t.pass("createTable with array constraint value ran successfully")
 })

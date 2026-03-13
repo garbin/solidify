@@ -1,6 +1,6 @@
 import test from "ava"
-import { pagination } from "../lib/pagination.mjs"
-import { WebServer } from "../lib/webserver.mjs"
+import { pagination } from "../dist/lib/pagination.js"
+import { WebServer } from "../dist/lib/webserver.js"
 
 // --- Tests ---
 
@@ -124,5 +124,68 @@ test.serial("Pagination: allowAll false and Range items=0-*", async (t) => {
     response.statusCode,
     416,
     "should return 416 Range Not Satisfiable when allowAll is false and full range is requested",
+  )
+})
+
+test.serial("Pagination: wrong unit in Range header", async (t) => {
+  const app = new WebServer()
+  app.register(pagination())
+  app.get("/wrong-unit", (_request, reply) => {
+    reply.send("ok")
+  })
+  const response = await app
+    .inject()
+    .get("/wrong-unit")
+    .headers({ Range: "bytes=0-9" })
+  t.is(
+    response.statusCode,
+    412,
+    "should return 412 Precondition Failed for wrong unit",
+  )
+})
+
+test.serial("Pagination: non-integer first value", async (t) => {
+  const app = new WebServer()
+  app.register(pagination())
+  app.get("/non-integer", (_request, reply) => {
+    reply.send("ok")
+  })
+  const response = await app
+    .inject()
+    .get("/non-integer")
+    .headers({ Range: "items=abc-10" })
+  t.is(
+    response.statusCode,
+    412,
+    "should return 412 Precondition Failed for malformed range",
+  )
+})
+
+test.serial("Pagination: custom maximum", async (t) => {
+  const app = new WebServer()
+  app.register(pagination({ maximum: 10 }))
+  app.get("/custom-max", (request, reply) => {
+    t.is(request.pagination.limit, 10, "limit should be custom maximum")
+    reply.paginate({ ...request.pagination, length: 100 })
+    reply.send(["item"])
+  })
+  const response = await app.inject().get("/custom-max")
+  t.is(response.statusCode, 206)
+})
+
+test.serial("Pagination: paginate with non-success status code", async (t) => {
+  const app = new WebServer()
+  app.register(pagination())
+  app.get("/error-status", (request, reply) => {
+    reply.code(404)
+    reply.paginate({ ...request.pagination, length: 100 })
+    reply.send({ error: "Not found" })
+  })
+  const response = await app.inject().get("/error-status")
+  t.is(response.statusCode, 404, "should keep 404 status code")
+  t.is(
+    response.headers["content-range"],
+    "items 0-49/100",
+    "Content-Range is still set",
   )
 })
