@@ -1,6 +1,6 @@
-# Contributing to epress
+# Contributing to Solidify
 
-First of all, thank you for considering contributing to epress! We welcome every contributor with open arms.
+First of all, thank you for considering contributing to Solidify! We welcome every contributor with open arms.
 
 This guide provides a clear contribution process to ensure your efforts can be smoothly integrated into the project. Following this guide helps us maintain consistent, high-quality code and orderly project development.
 
@@ -34,7 +34,7 @@ We use the standard GitHub Flow for collaboration. Here are the complete contrib
 
 All changes should revolve around an Issue.
 
-- **If you want to fix a bug**: First, search the [Issues list](https://github.com/epressworld/epress/issues) to see if a related issue already exists. If not, create a new issue using the "Bug" label. Describe the steps to reproduce, expected behavior, and actual behavior in detail.
+- **If you want to fix a bug**: First, search the [Issues list](https://github.com/garbin/solidify/issues) to see if a related issue already exists. If not, create a new issue using the "Bug" label. Describe the steps to reproduce, expected behavior, and actual behavior in detail.
 - **If you want to propose a new feature**: Create a new issue using the "Feature" label. Describe your idea, the problem it solves, and the proposed implementation in detail.
 
 Before you start coding, please leave a comment on the issue indicating you'd like to work on it and wait for a maintainer's confirmation to avoid duplicate work.
@@ -44,8 +44,8 @@ Before you start coding, please leave a comment on the issue indicating you'd li
 1.  Fork the main repository to your own GitHub account.
 2.  Clone your forked repository to your local machine:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/epress.git
-    cd epress
+    git clone https://github.com/YOUR_USERNAME/solidify.git
+    cd solidify
     ```
 
 ### Step 2: Set Up Your Local Environment
@@ -56,10 +56,10 @@ In the project root directory, run the following command to install all dependen
 npm install
 ```
 
-Then, you can start the local development server:
+Then, you can build the project:
 
 ```bash
-npm run dev
+npm run build
 ```
 
 ### Step 3: Create Your Development Branch
@@ -112,13 +112,13 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 The commit message format is: `<type>(<scope>): <subject>`
 
 - **type**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, etc.
-- **scope** (optional): The scope of the change, e.g., `client`, `server`, `graphql`.
+- **scope** (optional): The scope of the change, e.g., `model`, `router`, `graphql`.
 - **subject**: A short description of the change.
 
 **Examples:**
 ```bash
-git commit -m "feat(client): Add user profile page"
-git commit -m "fix(server): Correct avatar upload path validation"
+git commit -m "feat(model): Add support for composite primary keys"
+git commit -m "fix(router): Correct pagination offset calculation"
 ```
 
 ### Step 8: Push Your Branch to Your Fork
