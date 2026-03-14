@@ -25,7 +25,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "npm run build && c8 tsx node_modules/.bin/ava",
-    "coverage": "npm run test && c8 report --reporter=text-lcov > coverage/codecov.lcov"
+    "coverage": "npm run test && c8 report --reporter=text-lcov > coverage/codecov.lcov",
+    "prepublishOnly": "npm run build"
   },
   "ava": {
     "extensions": {
