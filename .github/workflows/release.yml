@@ -74,6 +74,7 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest
     needs: [lint, security-audit, test]
+    environment: release
     permissions:
       contents: read
       id-token: write
