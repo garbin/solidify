@@ -1,5 +1,4 @@
 import type { GraphQLResolveInfo } from "graphql"
-// @ts-nocheck
 import { singularize } from "inflected"
 import type { Model } from "../../model.js"
 import { Loader } from "../loader.js"
@@ -318,13 +317,17 @@ function fetch(
 
     const config = resolveFetchConfig(root, options)
 
+    if (!config.model) {
+      throw new Error("Model is required for fetch operation")
+    }
+
     return await load({
       name: `${(config.parent as typeof Model).name}-${config.model.name}`,
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       async fetch(parents: any[]) {
         return await buildHasManyQuery({
-          model: config.model,
+          model: config.model!,
           foreignKey: config.foreignKey,
           parents,
           parentForeignKey: config.parentForeignKey,

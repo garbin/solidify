@@ -28,7 +28,11 @@ export function plugin({
       if (typeDefs && resolvers) {
         config.schema = makeExecutableSchema({
           typeDefs: [...scalarsDefs, typeDefs],
-          resolvers: { ...scalarsResolvers, ...resolvers },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          resolvers: {
+            ...scalarsResolvers,
+            ...resolvers,
+          } as any,
         })
       }
       app.register(mercurius, config)

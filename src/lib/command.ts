@@ -249,6 +249,6 @@ export class Command {
    */
   async execute(argv: string[] = process.argv): Promise<void> {
     if (!this.program) this.initialize()
-    await this.program.action(this.action.bind(this)).parse(argv)
+    await this.program!.action(this.action.bind(this)).parse(argv)
   }
 }
