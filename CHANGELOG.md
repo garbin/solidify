@@ -5,7 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1] - 2025-03-14
+
+### Fixed
+
+- **BREAKING FIX**: WebServer now uses JavaScript Proxy pattern to expose all Fastify methods
+  - Previous manual method proxying missed `decorate`, `addHook`, `decorateRequest`
+  - All Fastify instance methods and properties now automatically available
+  - No need to manually add method proxies when Fastify adds new features
+
+## [0.2.0] - 2025-03-14
 
 ### Added
 
