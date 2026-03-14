@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { singularize } from "inflected"
-import Knex, { type Config } from "knex"
+import Knex from "knex"
 import { fromPairs, has, isArray, isEmpty, pick, toPairs } from "lodash-es"
 import {
   Model as BaseModel,
@@ -9,6 +8,7 @@ import {
   type QueryContext,
   type Relation,
   type RelationMappings,
+  type RelationType,
   type ValidatorArgs,
 } from "objection"
 import yup from "yup"
@@ -16,6 +16,21 @@ import yup from "yup"
 // ============================================================================
 // Types
 // ============================================================================
+
+export interface RelationMapping {
+  relation: RelationType
+  modelClass: typeof Model
+  foreignKey?: string
+  uniqueKey?: string
+  parentForeignKey?: string
+  join: {
+    from: string
+    to: string
+    through?: { from: string; to: string }
+    [key: string]: unknown
+  }
+  [key: string]: unknown
+}
 
 export type FieldType =
   | "increments"
@@ -60,6 +75,7 @@ export interface FieldConfig {
   parser?: (value: unknown) => unknown
   timestamp?: "insert" | "update"
   graphql?: { type?: string; [key: string]: unknown }
+  [key: string]: unknown
 }
 
 export type FieldsConfig = Record<string, FieldConfig>
@@ -74,7 +90,7 @@ export interface JoinConfig {
 
 export interface MigrationOptions {
   drop?: boolean
-  knex?: Knex
+  knex?: Knex.Knex
 }
 
 // ============================================================================
@@ -240,9 +256,9 @@ function createBaseValidator(
 
     default:
       return (
-        (yup as Record<string, (...args: unknown[]) => YupSchema>)[_type]?.(
-          ...args,
-        ) ?? yup.mixed()
+        (yup as unknown as Record<string, (...args: unknown[]) => YupSchema>)[
+          _type
+        ]?.(...args) ?? yup.mixed()
       )
   }
 }
@@ -400,7 +416,7 @@ function belongsToOneRelation(
   currentModel: typeof Model,
   relatedModel: typeof Model,
   join: JoinConfig = {},
-): unknown {
+): RelationMapping {
   if (Array.isArray(relatedModel.idColumn)) {
     throw new Error(
       "Composite keys are not supported in belongsToOne shortcut currently",
@@ -421,7 +437,7 @@ function belongsToOneRelation(
       to: `${relatedModel.tableName}.${_uniqueKey}`,
       ...rest,
     },
-  } as Relation
+  }
 }
 
 function hasManyRelation(
@@ -429,7 +445,7 @@ function hasManyRelation(
   relatedModel: typeof Model,
   join: JoinConfig = {},
   graphql: Record<string, unknown> = {},
-): unknown {
+): RelationMapping {
   if (Array.isArray(currentModel.idColumn)) {
     throw new Error(
       "Composite keys are not supported in hasMany shortcut currently",
@@ -448,7 +464,7 @@ function hasManyRelation(
       ...rest,
     },
     ...graphql,
-  } as Relation
+  }
 }
 
 function hasOneRelation(
@@ -456,7 +472,7 @@ function hasOneRelation(
   relatedModel: typeof Model,
   join: JoinConfig = {},
   graphql: Record<string, unknown> = {},
-): unknown {
+): RelationMapping {
   if (Array.isArray(currentModel.idColumn)) {
     throw new Error(
       "Composite keys are not supported in hasOne shortcut currently",
@@ -480,14 +496,14 @@ function hasOneRelation(
       to: `${relatedModel.tableName}.${foreignKey}`,
       ...rest,
     },
-  } as Relation
+  }
 }
 
 function manyToManyRelation(
   currentModel: typeof Model,
   relatedModel: typeof Model,
   join: JoinConfig = {},
-): unknown {
+): RelationMapping {
   if (
     Array.isArray(currentModel.idColumn) ||
     Array.isArray(relatedModel.idColumn)
@@ -520,7 +536,7 @@ function manyToManyRelation(
       to: `${relatedModel.tableName}.${relatedModel.idColumn as string}`,
       ...rest,
     },
-  } as Relation
+  }
 }
 
 // ============================================================================
@@ -580,7 +596,7 @@ export class Model extends BaseModel {
     return buildValidator(this.fields)
   }
 
-  static connect(knexConfig: Config): Knex {
+  static connect(knexConfig: Knex.Knex.Config): Knex.Knex {
     const knex = Knex(knexConfig)
     Model.knex(knex)
     return knex
@@ -652,20 +668,22 @@ export class Model extends BaseModel {
   static findRelation(
     child: typeof Model,
     types: string | string[],
-  ): { name: string; info: Relation } {
+  ): { name: string; info: RelationMapping } {
     const typeList = Array.isArray(types) ? types : [types]
 
     const result = toPairs(this.relations).find(
       ([, relationInfo]) =>
-        (relationInfo as Relation).modelClass === child &&
-        typeList.includes((relationInfo as Relation).relation as string),
+        (relationInfo as RelationMapping).modelClass === child &&
+        typeList.includes(
+          (relationInfo as RelationMapping).relation as unknown as string,
+        ),
     )
 
     if (!result) {
       throw new Error(`Relation ${child} can not be found`)
     }
 
-    const [name, info] = result
+    const [name, info] = result as [string, RelationMapping]
     return { name, info }
   }
 
@@ -733,7 +751,7 @@ export class Validator extends BaseValidator {
   schema: Record<string, YupSchema>
 
   constructor(schema: Record<string, YupSchema>) {
-    super(schema)
+    super()
     this.schema = schema
   }
 

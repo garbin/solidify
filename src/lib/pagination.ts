@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   FastifyInstance,
   FastifyPluginCallback,
@@ -8,7 +7,7 @@ import type {
 import fp from "fastify-plugin"
 import contentRangeFormat from "http-content-range-format"
 import createError from "http-errors"
-import rangeSpecifierParser from "range-specifier-parser"
+import * as rangeSpecifierParser from "range-specifier-parser"
 
 /**
  * Pagination configuration options.
@@ -136,7 +135,7 @@ export function pagination({
 
       app.addHook("onRequest", async (request: FastifyRequest) => {
         let first = 0
-        let last = maximum
+        let last: number | "*" = maximum
         let limit: number | "*" = "*"
 
         // Handle `Range` header.
@@ -149,7 +148,9 @@ export function pagination({
           ) {
             throw new createError.InternalServerError("Invalid Configuration")
           }
-          const range = rangeSpecifierParser.default(request.headers.range)
+          const range = rangeSpecifierParser.default.default(
+            request.headers.range,
+          )
 
           if (range === -1) {
             throw new createError.RangeNotSatisfiable()

@@ -24,14 +24,20 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "test": "npm run build && c8 ava",
-    "test:contract": "npm run build && ava \"test/contract/**/*.test.js\"",
-    "test:matrix": "npm run build && ava \"test/matrix/**/*.test.js\"",
-    "test:types": "npm run build && tsc -p test/types/tsconfig.json --noEmit",
+    "test": "npm run build && c8 tsx node_modules/.bin/ava",
     "coverage": "npm run test && c8 report --reporter=text-lcov > coverage/codecov.lcov"
   },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "files": [
+      "test/**/*.test.ts"
+    ],
+    "workerThreads": false
+  },
   "lint-staged": {
-    "*.{js,jsx,mjs,mts}": [
+    "*.{js,jsx,mjs,mts,ts}": [
       "npm run lint -- --write"
     ]
   },
@@ -66,6 +72,7 @@
     "mysql2": "^3.15.3",
     "pg": "^8.16.3",
     "sqlite3": "^5.1.7",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.2"
   },
   "engines": {

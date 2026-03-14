@@ -328,7 +328,7 @@ test("GraphQL Basic Usage", async (t) => {
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
   const query = await client.query(
     `
       query hello($id: ID!) {
@@ -388,7 +388,7 @@ test("GraphQL Presets", async (t) => {
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
   const userInput = { name: faker.person.fullName() }
   const createUser = await client.query(
     `
@@ -579,7 +579,7 @@ test("GraphQL Presets - Mutation: update/destroy non-existent item", async (t) =
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const updateNonExistent = await client.query(
     `
@@ -706,7 +706,7 @@ test("GraphQL Presets - Batch: hasOne/belongsTo with multiple results (edge case
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const query = `
     query fetchUser($id: ID!) {
@@ -781,7 +781,7 @@ test("GraphQL Presets - Search: filtering coverage", async (t) => {
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const searchByName = await client.query(
     `query { searchByStrings(type: FILTER_TEST, filterBy: {name: "item1"}) { edges { node { ...on FilterTestModel { name } } } } }`,
@@ -883,7 +883,7 @@ test("GraphQL Presets Coverage", async (t) => {
   )
   await app.ready()
 
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
   const item = await TestModel.query().insertAndFetch({ name: "test-item" })
 
   // Test fetch compose
@@ -950,7 +950,7 @@ test("GraphQL Presets - Batch: getLoader error handling", async (t) => {
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const result = await client.query(`query { testField }`)
 
@@ -994,7 +994,7 @@ test("GraphQL Presets - Batch: belongsToMany assemble with no related items", as
   )
   await app.ready()
 
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const query = `query { posts { id content tags { tag } } }`
   const result = await client.query(query)
@@ -1045,7 +1045,7 @@ test("GraphQL Presets - Batch: belongsToMany assemble with multiple related item
   )
   await app.ready()
 
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const query = `query { posts { id content tags { tag } } }`
   const result = await client.query(query)
@@ -1090,7 +1090,7 @@ test("GraphQL Presets - Search: limit option", async (t) => {
     }),
   )
   await app.ready() // Ensure plugin is ready
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const result = await client.query(
     `query { searchLimited(type: LIMIT_TEST) { edges { node { ...on LimitTestModel { name } } } } }`,
@@ -1207,7 +1207,7 @@ test.serial(
     )
 
     await app.ready()
-    const client = createMercuriusTestClient(app)
+    const client = createMercuriusTestClient(app.instance)
 
     const result = await client.query(
       `query {
@@ -1331,7 +1331,7 @@ test.serial("GraphQL Presets - Search: offset pagination mode", async (t) => {
   )
 
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   const result = await client.query(
     `query {
@@ -1429,7 +1429,7 @@ test.serial(
     )
 
     await app.ready()
-    const client = createMercuriusTestClient(app)
+    const client = createMercuriusTestClient(app.instance)
 
     const result = await client.query(
       `query {
@@ -1503,7 +1503,7 @@ test.serial(
     )
 
     await app.ready()
-    const client = createMercuriusTestClient(app)
+    const client = createMercuriusTestClient(app.instance)
 
     // 测试升序排序
     let result = await client.query(
@@ -1566,7 +1566,7 @@ test.serial("GraphQL Presets - Search: sortable option", async (t) => {
     }),
   )
   await app.ready()
-  const client = createMercuriusTestClient(app)
+  const client = createMercuriusTestClient(app.instance)
 
   // 测试直接查询
   const directQueryResult = await client.query(

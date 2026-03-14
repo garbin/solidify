@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as builtin from "graphql"
 import * as scalars from "graphql-scalars"
 import { get, isArray, isFunction } from "lodash-es"
@@ -79,17 +78,26 @@ export function model(modelClass: typeof Model): any {
         if (relationInfo.relation === Model.HasManyRelation) {
           fields[relation] = {
             type: type("List", model(relatedModel)),
-            resolve: presets.batch.hasMany(relatedModel, options),
+            resolve: presets.batch.hasMany(
+              relatedModel,
+              options as Parameters<typeof presets.batch.hasMany>[1],
+            ),
           }
         } else if (relationInfo.relation === Model.HasOneRelation) {
           fields[relation] = {
             type: model(relatedModel),
-            resolve: presets.batch.hasOne(relatedModel, options),
+            resolve: presets.batch.hasOne(
+              relatedModel,
+              options as Parameters<typeof presets.batch.hasOne>[1],
+            ),
           }
         } else if (relationInfo.relation === Model.BelongsToOneRelation) {
           fields[relation] = {
             type: model(relatedModel),
-            resolve: presets.batch.belongsTo(relatedModel, options),
+            resolve: presets.batch.belongsTo(
+              relatedModel,
+              options as Parameters<typeof presets.batch.belongsTo>[1],
+            ),
           }
         } else if (relationInfo.relation === Model.ManyToManyRelation) {
           fields[relation] = {
@@ -115,5 +123,6 @@ export function type(name: string, ...args: unknown[]): any {
   if (!Type) {
     throw new Error(`GraphQL type '${name}' does not exist`)
   }
-  return isFunction(Type) ? new Type(...args) : Type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return isFunction(Type) ? new (Type as any)(...args) : Type
 }

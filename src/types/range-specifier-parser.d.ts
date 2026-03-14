@@ -5,5 +5,8 @@ declare module "range-specifier-parser" {
     last: number | "*"
   }
 
-  export default function parse(rangeHeader: string): Range | -1 | -2
+  type ParseFunction = (rangeHeader: string) => Range | -1 | -2
+
+  const _default: { default: ParseFunction }
+  export = _default
 }

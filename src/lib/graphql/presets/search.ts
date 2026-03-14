@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { GraphQLResolveInfo } from "graphql"
 import { includes, isArray, isEmpty, isFunction, trimStart } from "lodash-es"
 import type { Model } from "../../model.js"
@@ -246,6 +245,7 @@ export interface ConnectionResolverOptions {
   limit?: number
   cursorColumn?: string | string[]
   useOffset?: boolean
+  cursor?: unknown
 }
 
 interface OrderField {

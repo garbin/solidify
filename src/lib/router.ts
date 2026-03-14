@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type {
   FastifyInstance,
   FastifyPluginAsync,
@@ -19,8 +18,17 @@ import {
   last,
   trimStart,
 } from "lodash-es"
+import type { RelationType } from "objection"
 import { Model } from "./model.js"
 import { cursor2page } from "./pagination.js"
+
+// Extend Fastify request context types
+declare module "@fastify/request-context" {
+  interface RequestContext {
+    get<T = unknown>(key: string): T | undefined
+    set<T>(key: string, value: T): void
+  }
+}
 
 // ============================================================================
 // Types
@@ -38,31 +46,27 @@ export interface RouteDefinition extends Partial<RouteOptions> {
   handler: RouteHandler
 }
 
-export interface ListOptions {
+export interface ListOptions extends Record<string, unknown> {
   select?: string[]
   join?: string
-  eager?: Parameters<Model["query"]>["withGraphFetched"] extends (
-    args: infer T,
-  ) => unknown
-    ? T
-    : never
+  eager?: unknown
   sortable?: string[]
   searchable?: string[] | ((context: SearchContext) => void)
   filterable?: string[] | ((context: FilterContext) => void)
 }
 
-export interface ItemOptions {
+export interface ItemOptions extends Record<string, unknown> {
   select?: string[]
   eager?: unknown
   join?: string
 }
 
-export interface UpdateOptions {
+export interface UpdateOptions extends Record<string, unknown> {
   patch?: boolean
   after?: RouteHandler
 }
 
-export interface DestroyOptions {
+export interface DestroyOptions extends Record<string, unknown> {
   after?: RouteHandler
 }
 
@@ -130,31 +134,60 @@ function extract<T extends Record<string, unknown> = Record<string, unknown>>(
 export class Router {
   routes: RouteDefinition[] = []
   middleHandlers: MiddlewareHandler[] = []
-  methods = ["get", "post", "patch", "delete", "put"]
 
-  constructor() {
-    return new Proxy(this, {
-      get(target, method: string) {
-        if (method in target) {
-          return (target as Record<string, unknown>)[method]
-        } else if (target.methods.includes(method)) {
-          return (
-            url: string,
-            handler: RouteHandler,
-            options: Partial<RouteDefinition> = {},
-          ) => {
-            target.routes.push({
-              method: method.toUpperCase() as HTTPMethods,
-              url,
-              handler: compose(...target.middleHandlers, handler),
-              ...options,
-            })
-            return this
-          }
-        }
-        return undefined
-      },
+  private addRoute(
+    method: HTTPMethods,
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    this.routes.push({
+      method,
+      url,
+      handler: compose(...this.middleHandlers, handler),
+      ...options,
     })
+    return this
+  }
+
+  get(
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    return this.addRoute("GET", url, handler, options)
+  }
+
+  post(
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    return this.addRoute("POST", url, handler, options)
+  }
+
+  put(
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    return this.addRoute("PUT", url, handler, options)
+  }
+
+  patch(
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    return this.addRoute("PATCH", url, handler, options)
+  }
+
+  delete(
+    url: string,
+    handler: RouteHandler,
+    options: Partial<RouteDefinition> = {},
+  ): this {
+    return this.addRoute("DELETE", url, handler, options)
   }
 
   use(...middleHandlers: MiddlewareHandler[]): this {
@@ -189,17 +222,16 @@ export class RESTfulRouter extends Router {
   }
 
   constructor(model: typeof Model, options: RouterOptions = {}) {
+    super()
     if (!(model.prototype instanceof Model)) {
       throw new Error("Invalid model provided to RESTfulRouter")
     }
-    const proxy = super()
     this.model = model
     this.metadata.idColumn = options.idColumn || (model.idColumn as string)
     this.metadata.idType = options.idType || "\\d+"
     this.metadata.rootPath = options.rootPath || `/${model.tableName}`
     this.metadata.itemPath = `${this.metadata.rootPath}/:${this.metadata.idColumn}`
     this.metadata.query = options.query || (() => model.query())
-    return proxy
   }
 
   create(...args: (RouteHandler | Record<string, unknown>)[]): this {
@@ -207,7 +239,8 @@ export class RESTfulRouter extends Router {
     this.post(
       this.metadata.rootPath!,
       compose(...handlers, async (request, reply) => {
-        const query =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const query: any =
           request.requestContext.get("query") || this.metadata.query!()
         const attributes =
           request.requestContext.get("attributes") || request.body
@@ -462,9 +495,9 @@ export class RESTfulRouter extends Router {
     options: RouterOptions = {},
   ): this {
     const relation = this.model.findRelation(childModel, [
-      Model.HasManyRelation,
-      Model.HasOneRelation,
-      Model.ManyToManyRelation,
+      Model.HasManyRelation as unknown as string,
+      Model.HasOneRelation as unknown as string,
+      Model.ManyToManyRelation as unknown as string,
     ])
     if (!relation.name) {
       throw new httpErrors.InternalServerError("Relation not found")
