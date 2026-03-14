@@ -7,74 +7,72 @@ import Fastify, {
 export { Fastify }
 
 /**
- * Enhanced Fastify server with request context support.
- * Automatically registers @fastify/request-context for per-request storage.
- *
- * @example
- * ```typescript
- * const server = new WebServer({ logger: true })
- * // In a handler:
- * request.requestContext.set('user', user)
- * const user = request.requestContext.get('user')
- * ```
+ * WebServer core class - internal implementation
  */
-export class WebServer {
-  private _instance: FastifyInstance
+class WebServerCore {
+  protected _instance: FastifyInstance
 
   constructor(options?: FastifyServerOptions) {
     this._instance = Fastify(options)
     this._instance.register(fastifyRequestContext)
   }
 
-  get inject() {
-    return this._instance.inject.bind(this._instance)
-  }
-  get register() {
-    return this._instance.register.bind(this._instance)
-  }
-  get get() {
-    return this._instance.get.bind(this._instance)
-  }
-  get post() {
-    return this._instance.post.bind(this._instance)
-  }
-  get put() {
-    return this._instance.put.bind(this._instance)
-  }
-  get delete() {
-    return this._instance.delete.bind(this._instance)
-  }
-  get patch() {
-    return this._instance.patch.bind(this._instance)
-  }
-  get head() {
-    return this._instance.head.bind(this._instance)
-  }
-  get options() {
-    return this._instance.options.bind(this._instance)
-  }
-  get all() {
-    return this._instance.all.bind(this._instance)
-  }
-  get route() {
-    return this._instance.route.bind(this._instance)
-  }
-  get listen() {
-    return this._instance.listen.bind(this._instance)
-  }
-  get close() {
-    return this._instance.close.bind(this._instance)
-  }
-  get ready() {
-    return this._instance.ready.bind(this._instance)
-  }
-  get log() {
-    return this._instance.log
-  }
-  get server() {
-    return this._instance.server
-  }
   get instance(): FastifyInstance {
     return this._instance
   }
+}
+
+// Property names that should NOT be proxied (WebServerCore's own properties)
+const ownProperties = new Set(["instance", "_instance", "constructor"])
+
+/**
+ * Enhanced Fastify server with request context support.
+ * Automatically registers @fastify/request-context for per-request storage.
+ * All Fastify methods are automatically available through Proxy.
+ *
+ * @example
+ * ```typescript
+ * const server = new WebServer({ logger: true })
+ * // All Fastify methods work:
+ * server.decorate('myProp', 'value')
+ * server.addHook('onRequest', async (request) => { ... })
+ * server.decorateRequest('config', null)
+ * // Escape hatch for direct access:
+ * const fastify = server.instance
+ * ```
+ */
+export const WebServer = new Proxy(WebServerCore, {
+  construct(target, args) {
+    const webServer = new target(args[0])
+
+    return new Proxy(webServer as unknown as FastifyInstance, {
+      get(obj, prop: string) {
+        // If it's an own property of WebServerCore, return it directly
+        if (ownProperties.has(prop)) {
+          const value = (obj as unknown as Record<string, unknown>)[prop]
+          if (typeof value === "function") {
+            return value.bind(obj)
+          }
+          return value
+        }
+
+        // Otherwise, forward to the Fastify instance
+        const core = obj as unknown as WebServerCore
+        const instance = core.instance
+        const value = (instance as unknown as Record<string, unknown>)[prop]
+
+        // Bind methods to the Fastify instance
+        if (typeof value === "function") {
+          return value.bind(instance)
+        }
+
+        return value
+      },
+    })
+  },
+})
+
+// Export type for TypeScript users
+export type WebServerType = FastifyInstance & {
+  instance: FastifyInstance
 }

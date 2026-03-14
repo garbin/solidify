@@ -54,3 +54,42 @@ test.serial("WebServer: comprehensive tests", async (t) => {
     "should return paginated data",
   )
 })
+
+test.serial(
+  "WebServer: Proxy pattern exposes all Fastify methods",
+  async (t) => {
+    const app = new WebServer()
+
+    // Test that previously missing methods now exist
+    t.is(typeof app.decorate, "function", "decorate should be a function")
+    t.is(typeof app.addHook, "function", "addHook should be a function")
+    t.is(
+      typeof app.decorateRequest,
+      "function",
+      "decorateRequest should be a function",
+    )
+
+    // Test that instance escape hatch works
+    t.truthy(app.instance, "instance should be accessible")
+
+    // Test decorate
+    app.decorate("testProp", "testValue")
+    t.is((app as any).testProp, "testValue", "decorate should work")
+
+    // Test decorateRequest
+    app.decorateRequest("customProp", null)
+
+    // Test addHook
+    let hookCalled = false
+    app.addHook("onRequest", async () => {
+      hookCalled = true
+    })
+
+    app.get("/test-hook", (_request, reply) => {
+      reply.send("ok")
+    })
+
+    await app.inject().get("/test-hook")
+    t.true(hookCalled, "addHook should work")
+  },
+)
