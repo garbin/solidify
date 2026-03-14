@@ -384,3 +384,54 @@ test.serial("RESTfulRouter: list with function-based filterable", async (t) => {
   const response = await app.inject().get("/resources?customFilter=15")
   t.is(response.json().length, 2, "should filter by custom function")
 })
+
+test.serial("RESTfulRouter: invalid id format returns 400", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  app.register(pagination())
+  const resources = new RESTfulRouter(Resource)
+  resources.item()
+  app.register(resources.plugin())
+
+  const response = await app.inject().get("/resources/invalid-id")
+  t.is(response.statusCode, 400, "should return 400 for non-integer id")
+})
+
+test.serial("RESTfulRouter: negative id returns 400", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  app.register(pagination())
+  const resources = new RESTfulRouter(Resource)
+  resources.item()
+  app.register(resources.plugin())
+
+  const response = await app.inject().get("/resources/-1")
+  t.is(response.statusCode, 400, "should return 400 for negative id")
+})
+
+test.serial("RESTfulRouter: update with invalid id returns 400", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  app.register(pagination())
+  const resources = new RESTfulRouter(Resource)
+  resources.update()
+  app.register(resources.plugin())
+
+  const response = await app
+    .inject()
+    .patch("/resources/invalid")
+    .body({ body: "test" })
+  t.is(response.statusCode, 400, "should return 400 for invalid id on update")
+})
+
+test.serial("RESTfulRouter: destroy with invalid id returns 400", async (t) => {
+  await setupTestDB()
+  const app = new WebServer()
+  app.register(pagination())
+  const resources = new RESTfulRouter(Resource)
+  resources.destroy()
+  app.register(resources.plugin())
+
+  const response = await app.inject().delete("/resources/invalid")
+  t.is(response.statusCode, 400, "should return 400 for invalid id on delete")
+})

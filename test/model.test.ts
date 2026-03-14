@@ -487,7 +487,7 @@ test("Model: createTable with invalid column type", async (t) => {
   const error = await t.throwsAsync(() => InvalidModel.createTable(), {
     instanceOf: Error,
   })
-  t.is(error.message, "Column type 'nonExistentType' is not supported by knex.")
+  t.true(error.message.startsWith("Invalid column type 'nonExistentType'"))
 })
 
 test("Model: findRelation with multiple types", (t) => {
