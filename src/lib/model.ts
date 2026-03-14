@@ -55,6 +55,32 @@ export type FieldType =
   | "enu"
   | string
 
+const ALLOWED_COLUMN_TYPES: readonly string[] = [
+  "increments",
+  "integer",
+  "tinyint",
+  "smallint",
+  "mediumint",
+  "bigint",
+  "bigInteger",
+  "string",
+  "text",
+  "boolean",
+  "float",
+  "decimal",
+  "date",
+  "datetime",
+  "time",
+  "timestamp",
+  "uuid",
+  "json",
+  "jsonb",
+  "enum",
+  "enu",
+  "binary",
+  "specific",
+] as const
+
 export interface FieldConfig {
   type: FieldType | [FieldType, ...unknown[]]
   constraints?: {
@@ -142,18 +168,19 @@ export {
 type YupSchema = any
 
 function createEnumValidator(args: unknown[]): YupSchema {
-  return yup.mixed().oneOf(...(args as [unknown[]]))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return yup.mixed().oneOf(...(args as [any[]]))
 }
 
-function createIntegerValidator(): ReturnType<typeof yup.number> {
+function createIntegerValidator(): YupSchema {
   return yup.number().integer()
 }
 
-function createNumberValidator(): ReturnType<typeof yup.number> {
+function createNumberValidator(): YupSchema {
   return yup.number()
 }
 
-function createStringValidator(args: unknown[]): ReturnType<typeof yup.string> {
+function createStringValidator(args: unknown[]): YupSchema {
   let validator = yup.string()
   if (args[0] && typeof args[0] === "number") {
     validator = validator.max(args[0])
@@ -161,7 +188,7 @@ function createStringValidator(args: unknown[]): ReturnType<typeof yup.string> {
   return validator
 }
 
-function createUuidValidator(): ReturnType<typeof yup.string> {
+function createUuidValidator(): YupSchema {
   return yup
     .string()
     .trim()
@@ -171,11 +198,11 @@ function createUuidValidator(): ReturnType<typeof yup.string> {
     )
 }
 
-function createDateValidator(): ReturnType<typeof yup.date> {
+function createDateValidator(): YupSchema {
   return yup.date()
 }
 
-function createTimestampValidator(): ReturnType<typeof yup.date> {
+function createTimestampValidator(): YupSchema {
   return yup.date().transform(function (castValue, originalValue) {
     return this.isType(castValue)
       ? castValue
@@ -379,6 +406,12 @@ function createColumn(
 ): any {
   const { type, constraints = {} } = fieldConfig
   const [_type, ...args] = isArray(type) ? type : [type]
+
+  if (!ALLOWED_COLUMN_TYPES.includes(_type)) {
+    throw new Error(
+      `Invalid column type '${_type}'. Allowed types: ${ALLOWED_COLUMN_TYPES.join(", ")}`,
+    )
+  }
 
   if (!table[_type]) {
     throw new Error(`Column type '${_type}' is not supported by knex.`)

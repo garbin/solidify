@@ -22,7 +22,6 @@ import type { RelationType } from "objection"
 import { Model } from "./model.js"
 import { cursor2page } from "./pagination.js"
 
-// Extend Fastify request context types
 declare module "@fastify/request-context" {
   interface RequestContext {
     get<T = unknown>(key: string): T | undefined
@@ -97,9 +96,39 @@ export type SearchParser = (
 ) => void
 export type FilterParser = (value: string) => void
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
+function getIdParamSchema(
+  idColumn: string,
+  idType: string,
+): Record<string, unknown> {
+  if (idType === "\\d+") {
+    return {
+      type: "object",
+      properties: {
+        [idColumn]: { type: "integer", minimum: 1 },
+      },
+      required: [idColumn],
+    }
+  }
+  return {
+    type: "object",
+    properties: {
+      [idColumn]: { type: "string", minLength: 1 },
+    },
+    required: [idColumn],
+  }
+}
+
+function getIdValue(
+  request: FastifyRequest,
+  idColumn: string,
+): string | number {
+  const params = request.params as Record<string, string>
+  const value = params[idColumn]
+  if (!value) {
+    throw new httpErrors.BadRequest(`Missing ${idColumn} parameter`)
+  }
+  return value
+}
 
 function compose(
   ...funcs: (MiddlewareHandler | undefined | null)[]
@@ -403,38 +432,45 @@ export class RESTfulRouter extends Router {
         if (options.select) query.select(...options.select)
         if (options.join) query.leftJoinRelated(options.join)
         options.eager && query.withGraphFetched(...(options.eager as [unknown]))
+        const idValue = getIdValue(request, this.metadata.idColumn!)
         reply.send(
           await query
             .findOne({
-              [`${this.model.tableName}.${this.metadata.idColumn}`]: (
-                request.params as Record<string, string>
-              )[this.metadata.idColumn!],
+              [`${this.model.tableName}.${this.metadata.idColumn}`]: idValue,
             })
             .throwIfNotFound(),
         )
       }),
+      {
+        schema: {
+          params: getIdParamSchema(
+            this.metadata.idColumn!,
+            this.metadata.idType!,
+          ),
+        },
+      } as Partial<RouteDefinition>,
     )
     return this
   }
 
   update(...args: (RouteHandler | UpdateOptions)[]): this {
     const { handlers, options } = extract<UpdateOptions>(args, { patch: true })
+    const idSchema = getIdParamSchema(
+      this.metadata.idColumn!,
+      this.metadata.idType!,
+    )
     const update = async (request: FastifyRequest, reply: FastifyReply) => {
       const attributes =
         request.requestContext.get("attributes") || request.body
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const query: any =
         request.requestContext.get("query") || this.metadata.query!()
-      const where = {
-        [this.metadata.idColumn!]: (request.params as Record<string, string>)[
-          this.metadata.idColumn!
-        ],
-      }
-      const item = await query.findOne(where)
+      const idValue = getIdValue(request, this.metadata.idColumn!)
+      const item = await query.findOne({
+        [this.metadata.idColumn!]: idValue,
+      })
       if (!(item instanceof this.model)) {
-        throw new httpErrors.NotFound(
-          `Item #${this.metadata.idColumn} = ${(request.params as Record<string, string>)[this.metadata.idColumn!]} can not be found`,
-        )
+        throw new httpErrors.NotFound("Resource not found")
       }
       const result = await item
         .$query()
@@ -442,16 +478,12 @@ export class RESTfulRouter extends Router {
       if (options.after) await options.after(request, reply)
       reply.code(202).send(result)
     }
-    this.put(
-      this.metadata.itemPath!,
-      compose(...handlers, update),
-      options as Partial<RouteDefinition>,
-    )
-    this.patch(
-      this.metadata.itemPath!,
-      compose(...handlers, update),
-      options as Partial<RouteDefinition>,
-    )
+    this.put(this.metadata.itemPath!, compose(...handlers, update), {
+      schema: { params: idSchema },
+    } as Partial<RouteDefinition>)
+    this.patch(this.metadata.itemPath!, compose(...handlers, update), {
+      schema: { params: idSchema },
+    } as Partial<RouteDefinition>)
 
     return this
   }
@@ -465,22 +497,26 @@ export class RESTfulRouter extends Router {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query: any =
           request.requestContext.get("query") || this.metadata.query!()
-        const where = {
-          [this.metadata.idColumn!]: (request.params as Record<string, string>)[
-            this.metadata.idColumn!
-          ],
-        }
-        const item = await query.findOne(where)
+        const idValue = getIdValue(request, this.metadata.idColumn!)
+        const item = await query.findOne({
+          [this.metadata.idColumn!]: idValue,
+        })
         if (!(item instanceof Model)) {
-          throw new httpErrors.NotFound(
-            `Item #${this.metadata.idColumn} = ${(request.params as Record<string, string>)[this.metadata.idColumn!]} can not be found`,
-          )
+          throw new httpErrors.NotFound("Resource not found")
         }
         request.requestContext.set("deleted", item)
         await item.$query().delete()
         if (options.after) await options.after(request, reply)
         reply.code(204).send()
       }),
+      {
+        schema: {
+          params: getIdParamSchema(
+            this.metadata.idColumn!,
+            this.metadata.idType!,
+          ),
+        },
+      } as Partial<RouteDefinition>,
     )
     return this
   }
