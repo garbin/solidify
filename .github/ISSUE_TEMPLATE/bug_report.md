@@ -18,13 +18,18 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Code Sample**
+If applicable, provide a minimal code sample that demonstrates the issue:
+
+```javascript
+// Your code here
+```
 
 **Environment (please complete the following information):**
- - OS: [e.g., macOS, Windows 10]
- - Browser: [e.g., Chrome, Firefox, Safari]
- - epress Version (if applicable): [e.g., v1.0.0]
+ - OS: [e.g., macOS, Windows 10, Linux]
+ - Node.js version: [e.g., 18.17.0]
+ - Solidify version: [e.g., 0.1.0]
+ - Database: [e.g., PostgreSQL 15, MySQL 8, SQLite 3]
 
 **Additional context**
 Add any other context about the problem here.

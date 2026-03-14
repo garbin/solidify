@@ -11,6 +11,7 @@
   <a href="https://www.npmjs.com/package/solidify.js"><img alt="NPM" src="https://img.shields.io/npm/v/solidify.js"></a>
   <a href="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"><img alt="Codecov" src="https://codecov.io/gh/garbin/solidify/branch/main/graph/badge.svg"></a>
   <a href="https://github.com/garbin/solidify/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/npm/l/solidify.js"></a>
+  <a href="https://nodejs.org"><img alt="Node.js" src="https://img.shields.io/node/v/solidify.js"></a>
 </p>
 
 Solidify is a powerful and flexible web server framework for Node.js. It's built on top of industry-leading libraries like [Fastify](https://www.fastify.io/) for performance, [Objection.js](https://vincit.github.io/objection.js/) for a powerful query builder and ORM, and [Mercurius](https://mercurius.dev/) for seamless GraphQL integration.
@@ -80,7 +81,7 @@ Create a `routes/users.mjs` file to define the API endpoints.
 
 ```javascript
 // routes/users.mjs
-import { RESTfulRouter } from "solidify";
+import { RESTfulRouter } from "solidify.js";
 import { User } from "../models/User.mjs";
 
 const router = new RESTfulRouter(User);
@@ -102,7 +103,7 @@ Create a `server.mjs` file to put everything together.
 
 ```javascript
 // server.mjs
-import { WebServer, Model } from "solidify";
+import { WebServer, Model } from "solidify.js";
 import Knex from "knex";
 import userRoutes from "./routes/users.mjs";
 
@@ -145,7 +146,7 @@ Solidify can automatically generate a GraphQL schema from your models. Just add 
 
 ```javascript
 // server.mjs (continued)
-import { graphql, model, presets } from "solidify";
+import { graphql } from "solidify.js";
 import { User } from "./models/User.mjs";
 
 server.register(graphql.plugin({
@@ -156,7 +157,7 @@ server.register(graphql.plugin({
   `,
   resolvers: {
     Query: {
-      users: presets.search(User),
+      users: graphql.presets.search(User),
     },
   },
   graphiql: true,
@@ -171,7 +172,7 @@ Easily create command-line tools for your application, like a database migration
 
 ```javascript
 // cli.mjs
-import { Command, Model, knexMigration } from "solidify";
+import { Command, Model, knexMigration } from "solidify.js";
 import { User } from "./models/User.mjs";
 import Knex from "knex";
 
@@ -197,12 +198,24 @@ Run it with `node cli.mjs db:migrate`.
 
 ## Documentation
 
-*Full documentation is coming soon.*
+### Guides
 
-- **Models:** Learn how to define fields, validations, and relations.
-- **Routing:** Dive deeper into the `Router` and `RESTfulRouter`.
-- **GraphQL:** Learn how to expose your API via GraphQL.
-- **Deployment:** Best practices for deploying a Solidify application.
+- [Quick Start Guide](./docs/guide/quick-start.md) - Get up and running quickly
+- [Model Definition](./docs/guide/model-definition.md) - Define fields, validation, and relationships
+- [REST API](./docs/guide/rest-api.md) - Create RESTful endpoints
+- [GraphQL Integration](./docs/guide/graphql.md) - Expose your API via GraphQL
+- [Database Migrations](./docs/guide/migrations.md) - Manage database schemas
+- [CLI Development](./docs/guide/cli.md) - Build command-line tools
+
+### API Reference
+
+- [Model API](./docs/api/model.md) - Enhanced Objection.js Model class
+- [Router API](./docs/api/router.md) - RESTfulRouter and base Router
+- [WebServer API](./docs/api/webserver.md) - Fastify-based web server
+- [Pagination API](./docs/api/pagination.md) - Pagination utilities
+- [Command API](./docs/api/command.md) - CLI command builder
+- [GraphQL API](./docs/api/graphql.md) - GraphQL plugin and presets
+- [Utilities API](./docs/api/utilities.md) - Helper functions
 
 ## Contributing
 
