@@ -9,15 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Full TypeScript migration with complete type definitions
+- Type declarations for all public APIs
+- Input validation for route parameters using Fastify JSON Schema
+- Column type whitelist validation in migrations
+
 ### Changed
 
-### Deprecated
-
-### Removed
+- **BREAKING**: Source code moved from `lib/` to `src/` with compiled output to `dist/`
+- **BREAKING**: Package exports now point to `dist/` directory
+- Enabled TypeScript `strict` mode for full type safety
+- Error messages no longer expose internal field names (security improvement)
+- All test files migrated to TypeScript (`.test.ts`)
 
 ### Fixed
 
+- Route parameter validation for `:id` parameters (returns 400 for invalid format)
+- Generic error messages for not found resources (prevents information leakage)
+
 ### Security
+
+- Added Fastify schema validation for all routes with `:id` parameters
+- Input validation now rejects non-integer IDs when integer is expected
+- Input validation now rejects negative IDs
+- Migration column types validated against whitelist to prevent arbitrary method calls
 
 ## [0.1.0] - 2024-11-22
 

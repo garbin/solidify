@@ -81,7 +81,7 @@ Create a `routes/users.mjs` file to define the API endpoints.
 
 ```javascript
 // routes/users.mjs
-import { RESTfulRouter } from "solidify";
+import { RESTfulRouter } from "solidify.js";
 import { User } from "../models/User.mjs";
 
 const router = new RESTfulRouter(User);
@@ -103,7 +103,7 @@ Create a `server.mjs` file to put everything together.
 
 ```javascript
 // server.mjs
-import { WebServer, Model } from "solidify";
+import { WebServer, Model } from "solidify.js";
 import Knex from "knex";
 import userRoutes from "./routes/users.mjs";
 
@@ -146,7 +146,7 @@ Solidify can automatically generate a GraphQL schema from your models. Just add 
 
 ```javascript
 // server.mjs (continued)
-import { graphql, model, presets } from "solidify";
+import { graphql } from "solidify.js";
 import { User } from "./models/User.mjs";
 
 server.register(graphql.plugin({
@@ -157,7 +157,7 @@ server.register(graphql.plugin({
   `,
   resolvers: {
     Query: {
-      users: presets.search(User),
+      users: graphql.presets.search(User),
     },
   },
   graphiql: true,
@@ -172,7 +172,7 @@ Easily create command-line tools for your application, like a database migration
 
 ```javascript
 // cli.mjs
-import { Command, Model, knexMigration } from "solidify";
+import { Command, Model, knexMigration } from "solidify.js";
 import { User } from "./models/User.mjs";
 import Knex from "knex";
 
